@@ -16,14 +16,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # For weasyprint and other dependencies
     build-essential \
     python3-dev \
+    pkg-config \
     libffi-dev \
-    libcairo2 \
-    libpango-1.0-0 \
-    libpangocairo-1.0-0 \
-    libgdk-pixbuf2.0-dev \
-    libharfbuzz0b \
-    libfribidi0 \
-    libfontconfig1 \
+    libcairo2-dev \
+    libpango1.0-dev \
+    libgdk-pixbuf-2.0-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libfontconfig1-dev \
     shared-mime-info \
     netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
