@@ -1,0 +1,346 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Dashboard - extrackr{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Welcome Section -->
+    <div class="dashboard-widget animate-fade-in">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Welcome back, {{ user.username|default:"Guest" }}!</h1>
+                <p class="text-gray-600 mt-2">Here's your financial overview for today.</p>
+            </div>
+            <div class="hidden md:block">
+                <div class="text-right">
+                    <p class="text-sm text-gray-500">Today's Date</p>
+                    <p class="text-lg font-semibold text-gray-900" id="current-date"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Total Income -->
+        <div class="dashboard-widget card-hover animate-fade-in">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-100 text-green-600">
+                    <i class="fas fa-arrow-down text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Income</p>
+                    <p class="text-2xl font-bold text-gray-900" id="total-income">$0.00</p>
+                    <p class="text-xs text-green-600">
+                        <i class="fas fa-arrow-up mr-1"></i>
+                        <span id="income-change">+0%</span> this month
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Expenses -->
+        <div class="dashboard-widget card-hover animate-fade-in">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-red-100 text-red-600">
+                    <i class="fas fa-arrow-up text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Expenses</p>
+                    <p class="text-2xl font-bold text-gray-900" id="total-expenses">$0.00</p>
+                    <p class="text-xs text-red-600">
+                        <i class="fas fa-arrow-up mr-1"></i>
+                        <span id="expense-change">+0%</span> this month
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Net Balance -->
+        <div class="dashboard-widget card-hover animate-fade-in">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                    <i class="fas fa-wallet text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Net Balance</p>
+                    <p class="text-2xl font-bold text-gray-900" id="net-balance">$0.00</p>
+                    <p class="text-xs text-blue-600">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Current balance
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Budget Status -->
+        <div class="dashboard-widget card-hover animate-fade-in">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                    <i class="fas fa-bullseye text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Budget Usage</p>
+                    <p class="text-2xl font-bold text-gray-900" id="budget-usage">0%</p>
+                    <p class="text-xs text-yellow-600">
+                        <i class="fas fa-chart-pie mr-1"></i>
+                        <span id="budget-status">On track</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Monthly Trend Chart -->
+        <div class="dashboard-widget animate-fade-in">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">
+                    <i class="fas fa-chart-line mr-2 text-blue-600"></i>
+                    Monthly Trend
+                </h3>
+                <select id="trend-period" class="form-control w-auto">
+                    <option value="6">Last 6 months</option>
+                    <option value="12" selected>Last 12 months</option>
+                </select>
+            </div>
+            <div id="monthly-trend-chart" class="chart-container"></div>
+        </div>
+
+        <!-- Category Breakdown -->
+        <div class="dashboard-widget animate-fade-in">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">
+                    <i class="fas fa-chart-pie mr-2 text-green-600"></i>
+                    Category Breakdown
+                </h3>
+                <select id="category-period" class="form-control w-auto">
+                    <option value="current">This Month</option>
+                    <option value="last">Last Month</option>
+                </select>
+            </div>
+            <div id="category-breakdown-chart" class="chart-container"></div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="dashboard-widget animate-fade-in">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">
+                <i class="fas fa-exchange-alt mr-2 text-purple-600"></i>
+                Recent Transactions
+            </h3>
+            <a href="{% url 'transactions:list' %}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                View All <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="recent-transactions" class="bg-white divide-y divide-gray-200">
+                    <!-- Transactions will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="dashboard-widget animate-fade-in">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            <i class="fas fa-bolt mr-2 text-orange-600"></i>
+            Quick Actions
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <a href="{% url 'transactions:add' %}?type=income" class="flex items-center justify-center p-4 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition-colors">
+                <div class="text-center">
+                    <i class="fas fa-plus text-green-600 text-2xl mb-2"></i>
+                    <p class="text-green-800 font-medium">Add Income</p>
+                </div>
+            </a>
+            <a href="{% url 'transactions:add' %}?type=expense" class="flex items-center justify-center p-4 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-colors">
+                <div class="text-center">
+                    <i class="fas fa-minus text-red-600 text-2xl mb-2"></i>
+                    <p class="text-red-800 font-medium">Add Expense</p>
+                </div>
+            </a>
+            <a href="{% url 'transactions:budgets' %}" class="flex items-center justify-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors">
+                <div class="text-center">
+                    <i class="fas fa-bullseye text-blue-600 text-2xl mb-2"></i>
+                    <p class="text-blue-800 font-medium">Set Budget</p>
+                </div>
+            </a>
+            <a href="{% url 'reports:dashboard' %}" class="flex items-center justify-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors">
+                <div class="text-center">
+                    <i class="fas fa-file-pdf text-purple-600 text-2xl mb-2"></i>
+                    <p class="text-purple-800 font-medium">Generate Report</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Dashboard functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set current date
+        document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        // Load dashboard data
+        loadDashboardData();
+        
+        // Initialize charts
+        initializeCharts();
+        
+        // Set up event listeners
+        document.getElementById('trend-period').addEventListener('change', updateTrendChart);
+        document.getElementById('category-period').addEventListener('change', updateCategoryChart);
+    });
+    
+    function loadDashboardData() {
+        // Mock data for demonstration - in real app, this would come from API
+        const mockData = {
+            totalIncome: 5420.50,
+            totalExpenses: 3245.75,
+            incomeChange: 12.5,
+            expenseChange: 8.3,
+            budgetUsage: 65.2,
+            recentTransactions: [
+                {
+                    date: '2024-01-15',
+                    description: 'Salary Payment',
+                    category: 'Income',
+                    amount: 3500.00,
+                    type: 'income'
+                },
+                {
+                    date: '2024-01-14',
+                    description: 'Grocery Shopping',
+                    category: 'Food',
+                    amount: -125.50,
+                    type: 'expense'
+                },
+                {
+                    date: '2024-01-13',
+                    description: 'Freelance Project',
+                    category: 'Freelance',
+                    amount: 800.00,
+                    type: 'income'
+                }
+            ]
+        };
+        
+        // Update stats
+        document.getElementById('total-income').textContent = extrackr.Utils.formatCurrency(mockData.totalIncome);
+        document.getElementById('total-expenses').textContent = extrackr.Utils.formatCurrency(mockData.totalExpenses);
+        document.getElementById('net-balance').textContent = extrackr.Utils.formatCurrency(mockData.totalIncome - mockData.totalExpenses);
+        document.getElementById('budget-usage').textContent = mockData.budgetUsage + '%';
+        
+        document.getElementById('income-change').textContent = '+' + mockData.incomeChange + '%';
+        document.getElementById('expense-change').textContent = '+' + mockData.expenseChange + '%';
+        
+        // Update recent transactions
+        const transactionsTable = document.getElementById('recent-transactions');
+        transactionsTable.innerHTML = mockData.recentTransactions.map(transaction => `
+            <tr class="transaction-item">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${extrackr.Utils.formatDate(transaction.date)}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${transaction.description}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${transaction.category}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <span class="${transaction.type === 'income' ? 'income-indicator' : 'expense-indicator'}">
+                        ${extrackr.Utils.formatCurrency(Math.abs(transaction.amount))}
+                    </span>
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    function initializeCharts() {
+        createMonthlyTrendChart();
+        createCategoryBreakdownChart();
+    }
+    
+    function createMonthlyTrendChart() {
+        const data = [
+            {
+                x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                y: [4200, 3800, 5100, 4700, 5400, 5200],
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Income',
+                line: { color: extrackr.ChartUtils.colors.income, width: 3 },
+                marker: { size: 8 }
+            },
+            {
+                x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                y: [2800, 3200, 3500, 3100, 3400, 3200],
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Expenses',
+                line: { color: extrackr.ChartUtils.colors.expense, width: 3 },
+                marker: { size: 8 }
+            }
+        ];
+        
+        const layout = Object.assign({}, extrackr.ChartUtils.getDefaultLayout(), {
+            title: '',
+            xaxis: { title: 'Month' },
+            yaxis: { title: 'Amount ($)' }
+        });
+        
+        Plotly.newPlot('monthly-trend-chart', data, layout, extrackr.ChartUtils.getDefaultConfig());
+    }
+    
+    function createCategoryBreakdownChart() {
+        const data = [{
+            values: [1200, 800, 600, 400, 300, 200],
+            labels: ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment', 'Other'],
+            type: 'pie',
+            hole: 0.4,
+            marker: {
+                colors: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#6B7280']
+            },
+            textinfo: 'label+percent',
+            textposition: 'outside'
+        }];
+        
+        const layout = Object.assign({}, extrackr.ChartUtils.getDefaultLayout(), {
+            title: '',
+            showlegend: false
+        });
+        
+        Plotly.newPlot('category-breakdown-chart', data, layout, extrackr.ChartUtils.getDefaultConfig());
+    }
+    
+    function updateTrendChart() {
+        // In real app, this would fetch new data based on selected period
+        createMonthlyTrendChart();
+    }
+    
+    function updateCategoryChart() {
+        // In real app, this would fetch new data based on selected period
+        createCategoryBreakdownChart();
+    }
+</script>
+{% endblock %}
