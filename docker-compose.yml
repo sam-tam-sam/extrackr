@@ -9,21 +9,36 @@ services:
       POSTGRES_DB: extrackr_db
       POSTGRES_USER: extrackr_user
       POSTGRES_PASSWORD: extrackr_password
-    ports:
-      - "5432:5432"
+    # The ports mapping is commented out for production if the database is not supposed to be accessed from outside the docker network.
+    # ports:
+    #   - "5432:5432"
 
   web:
-    build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >
+      sh -c "
+        echo 'Waiting for postgres...' &&
+        while ! nc -z db 5432; do
+          sleep 0.1;
+        done;
+        echo 'PostgreSQL started';
+        python manage.py migrate &&
+        python manage.py collectstatic --noinput &&
+        gunicorn extrackr_project.wsgi:application --bind 0.0.0.0:8000 --workers 4
+      "
     volumes:
-      - .:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     ports:
       - "8000:8000"
     environment:
-      - DEBUG=1
+      - DEBUG=0
+      - SECRET_KEY=your_very_secret_and_long_key_that_you_should_generate
       - DATABASE_URL=postgresql://extrackr_user:extrackr_password@db:5432/extrackr_db
+      # Change this to your domain or IP address in production
+      - ALLOWED_HOSTS=*
     depends_on:
       - db
 
