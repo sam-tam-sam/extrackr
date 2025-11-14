@@ -10,21 +10,22 @@ WORKDIR /app
 
 # Install netcat for the wait script and other essential dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    # For postgres
     postgresql-client \
-    build-essential \
     libpq-dev \
-    netcat-openbsd \
+    # For weasyprint and other dependencies
+    build-essential \
+    python3-dev \
+    libffi-dev \
+    libcairo2 \
     libpango-1.0-0 \
-    libpangoft2-1.0-0 \
+    libpangocairo-1.0-0 \
+    libgdk-pixbuf2.0-dev \
     libharfbuzz0b \
     libfribidi0 \
     libfontconfig1 \
-    libpangocairo-1.0-0 \
-    libcairo2 \
-    libgdk-pixbuf2.0-0 \
-    libffi-dev \
     shared-mime-info \
-    libgobject-2.0-0 \
+    netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
