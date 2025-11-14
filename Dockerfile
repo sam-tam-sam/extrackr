@@ -1,5 +1,5 @@
 # Use Python 3.11 slim image
-FROM python:3.11-bullseye
+FROM python:3.11-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -8,45 +8,23 @@ ENV PYTHONUNBUFFERED=1
 # Set work directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        postgresql-client \
-        build-essential \
-        libpq-dev \
-        libpango-1.0-0 \
-        libpangoft2-1.0-0 \
-        libharfbuzz0b \
-        libfribidi0 \
-        libfontconfig1 \
-        libpangocairo-1.0-0 \
-        libcairo2 \
-        libgdk-pixbuf2.0-0 \
-        libffi-dev \
-        shared-mime-info \
-        mime-support \
+# Install netcat for the wait script and other essential dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    postgresql-client \
+    build-essential \
+    libpq-dev \
+    netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
-COPY requirements.txt /app/
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy project
-COPY . /app/
+COPY . .
 
-# Create directories for static and media files
-RUN mkdir -p /app/static /app/media /app/staticfiles
-
-# Collect static files
-RUN python manage.py collectstatic --noinput
-
-# Create a non-root user
-RUN useradd --create-home --shell /bin/bash app
-RUN chown -R app:app /app
-USER app
+# This will be handled by the docker-compose command now
+# RUN python manage.py collectstatic --noinput
 
 # Expose port
 EXPOSE 8000
-
-# Command to run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "extrackr_project.wsgi:application"]
